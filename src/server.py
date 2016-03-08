@@ -2,13 +2,14 @@
 import socket
 
 buffer_length = 1024
+PORT = 5002
 
 
 def setup_server():
     server = socket.socket(socket.AF_INET,
                            socket.SOCK_STREAM,
                            socket.IPPROTO_TCP)
-    server.bind((u'127.0.0.1', 5000))
+    server.bind((u'127.0.0.1', PORT))
     server.listen(1)
     return server
 
@@ -29,8 +30,9 @@ def server_read(connection):
 
 
 def server_echo(string, connection):
-    # stream_info = [i for i in socket.getaddrinfo('127.0.0.1', 5000) if i[1] == socket.SOCK_STREAM[0]]
-    pass
+    # stream_info = [i for i in socket.getaddrinfo('127.0.0.1', PORT) if i[1] == socket.SOCK_STREAM[0]]
+    # connection.connect(('127.0.0.1', PORT))
+    connection.send(string.encode('utf-8'))
 
 
 def server():
@@ -44,3 +46,6 @@ def server():
         print("Closing the server!")
     finally:
         socket.close()
+
+if __name__ == "__main__":
+    server()
