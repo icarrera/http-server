@@ -1,8 +1,10 @@
 # -*-coding:utf-8-*-
+from __future__ import unicode_literals
 import socket
 
-buffer_length = 1024
-PORT = 5002
+
+buffer_length = 4
+PORT = 5000
 
 
 def setup_server():
@@ -20,13 +22,16 @@ def server_listen(server):
 
 
 def server_read(connection):
-    string = u''
+    string = ''.encode('utf-8')
     while True:
+        print("readings")
         part = connection.recv(buffer_length)
-        string += part.decode('utf-8')
+        print(len(part))
+        string += part
         if len(part) < buffer_length or len(part) == 0:
+            print("breaking")
             break
-    return (string, connection)
+    return (string.decode('utf-8'), connection)
 
 
 def server_echo(string, connection):
