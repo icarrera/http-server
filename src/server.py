@@ -27,12 +27,9 @@ def server_read(connection):
     """Read and parse message from client"""
     string = ''.encode('utf-8')
     while True:
-        print("readings")
         part = connection.recv(buffer_length)
-        print(len(part))
         string += part
         if len(part) < buffer_length or len(part) == 0:
-            print("breaking")
             break
     return (string.decode('utf-8'), connection)
 

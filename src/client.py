@@ -45,8 +45,6 @@ def get_reply(client):
     chunks = []
     while True:
         chunk = client.recv(buffer_length)
-        # client = client.accept()
-        chunk = chunk
         chunks.append(chunk)
         if len(chunk) < buffer_length or len(chunk) == 0:
             return (b''.join(chunks)).decode('utf-8').replace('\r', '')
@@ -67,7 +65,6 @@ def client(message):
         close(client)
 
     print(echo)
-    # print(len(echo))
     return echo
 
 if __name__ == "__main__":
