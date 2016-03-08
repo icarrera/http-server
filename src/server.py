@@ -1,5 +1,5 @@
 # -*-coding:utf-8-*-
-from __future__ import unicode_literals
+"""Handle server operations of reading incoming streams and echoing them"""
 import socket
 
 
@@ -8,6 +8,7 @@ PORT = 5000
 
 
 def setup_server():
+    """Build a socket object on localhost and specified port"""
     server = socket.socket(socket.AF_INET,
                            socket.SOCK_STREAM,
                            socket.IPPROTO_TCP)
@@ -17,11 +18,13 @@ def setup_server():
 
 
 def server_listen(server):
+    """Accept connections from the client"""
     conn, addr = server.accept()
     return (conn, addr)
 
 
 def server_read(connection):
+    """Read and parse message from client"""
     string = ''.encode('utf-8')
     while True:
         print("readings")
@@ -35,12 +38,12 @@ def server_read(connection):
 
 
 def server_echo(string, connection):
-    # stream_info = [i for i in socket.getaddrinfo('127.0.0.1', PORT) if i[1] == socket.SOCK_STREAM[0]]
-    # connection.connect(('127.0.0.1', PORT))
+    """Send back specified string to specified connection"""
     connection.send(string.encode('utf-8'))
 
 
 def server():
+    """Main server loop"""
     try:
         socket = setup_server()
         while True:

@@ -1,5 +1,5 @@
 # -*-coding:utf-8-*-
-# from __future__ import unicode_literals
+"""Handle client operations of building a client and recieving messages from server"""
 import socket
 import sys
 
@@ -10,11 +10,13 @@ PORT = 5000
 
 
 def setup_socket():
+    """Gather required information for building a socket object"""
     info = socket.getaddrinfo('127.0.0.1', PORT)
     return [i for i in info if i[1] == socket.SOCK_STREAM][0]
 
 
 def build_client(socket_details):
+    """Use given information to build a socket object"""
     client = socket.socket(socket.AF_INET,
                            socket.SOCK_STREAM,
                            socket.IPPROTO_TCP)
@@ -23,11 +25,13 @@ def build_client(socket_details):
 
 
 def send_message(socket, message):
+    """Send a scrubbed message to the server"""
     socket.connect(('127.0.0.1', PORT))
     socket.sendall(scrub_message(message))
 
 
 def scrub_message(message):
+    """Take the text, and depending if it's python3 or 2, encode it into utf-8"""
     if len(message) % buffer_length == 0:
         message += '\r'
     if hasattr(message, "decode"):
@@ -36,8 +40,8 @@ def scrub_message(message):
         return message.encode('utf-8')
 
 
-
 def get_reply(client):
+    """Get reply from the server"""
     chunks = []
     while True:
         chunk = client.recv(buffer_length)
@@ -49,10 +53,12 @@ def get_reply(client):
 
 
 def close(socket):
+    """Close socket gracefully"""
     socket.close()
 
 
 def client(message):
+    """Main functionality of building a client and echoing return value"""
     client = build_client(setup_socket())
     try:
         send_message(client, message)
