@@ -25,6 +25,12 @@ def server_listen(server):
 
 def server_read(connection):
     """Read and parse message from client"""
+
+    # XXX 3/6/16
+    # What we should've done was exclude the if statement and call server_echo()
+    # REGARDLESS of whether we've recieved the whole message or not, because
+    # We don't care, we just want to echo immediately.
+
     string = ''.encode('utf-8')
     while True:
         part = connection.recv(buffer_length)
