@@ -3,14 +3,44 @@ import socket
 
 buffer_length = 1024
 
+
 def setup_server():
     server = socket.socket(socket.AF_INET,
                            socket.SOCK_STREAM,
                            socket.IPPROTO_TCP)
-    server.bind(('127.0.0.1', 5000))
+    server.bind((u'127.0.0.1', 5000))
     server.listen(1)
     return server
+
 
 def server_listen(server):
     conn, addr = server.accept()
     return (conn, addr)
+
+
+def server_read(connection):
+    string = u''
+    while True:
+        part = connection.recv(buffer_length)
+        string += part.decode('utf-8')
+        if len(part) < buffer_length or len(part) == 0:
+            break
+    return (string, connection)
+
+
+def server_echo(string, connection):
+    # stream_info = [i for i in socket.getaddrinfo('127.0.0.1', 5000) if i[1] == socket.SOCK_STREAM[0]]
+    pass
+
+
+def server():
+    try:
+        socket = setup_server()
+        while True:
+            connection, address = server_listen(socket)
+            result, connection = server_read(connection)
+            server_echo(result, connection)
+    except KeyboardInterrupt:
+        print("Closing the server!")
+    finally:
+        socket.close()
