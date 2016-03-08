@@ -1,9 +1,8 @@
 # -*-coding:utf-8-*-
 """Handle server operations of reading incoming streams and echoing them"""
 import socket
-import email.utils
 
-buffer_length = 4
+buffer_length = 1024
 PORT = 5000
 
 
