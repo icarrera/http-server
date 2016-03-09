@@ -38,6 +38,7 @@ def test_reply_with_strings(message):
 
 @pytest.mark.parametrize("message,", NON_STRINGS)
 def test_reply_with_non_strings(message):
+    """Test if nonstring objects passed into client raise TypeError"""
     with pytest.raises(TypeError):
         client.client(message)
 
