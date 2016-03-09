@@ -69,6 +69,10 @@ def server():
                 server_response(response_error(), connection)
     except KeyboardInterrupt:
         print("Closing the server!")
+        try:
+            connection.close()
+        except NameError:
+            pass
     finally:
         socket.close()
 
