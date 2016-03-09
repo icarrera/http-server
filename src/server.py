@@ -3,7 +3,7 @@
 import socket
 
 buffer_length = 1024
-PORT = 5000
+PORT = 5001
 
 
 def setup_server():
@@ -36,7 +36,7 @@ def server_read(connection):
         string += part
         if len(part) < buffer_length or len(part) == 0:
             break
-    return (string.decode('utf-8'), connection)
+    return string.decode('utf-8')
 
 
 def server_response(string, connection):
@@ -44,15 +44,14 @@ def server_response(string, connection):
     connection.send(string.encode('utf-8'))
 
 
-def response_ok(connection):
+def response_ok():
     """Send back an HTTP 200 OK status message"""
-    server_response("HTTP/1.1 200 OK<CRLF>\n", connection)
-    server_response("<CRLF>\n", connection)
+    return "HTTP/1.1 200 OK<CRLF>\n.<CRLF>\n"
 
 
-def response_error(connection):
+def response_error():
     """Send back an HTTP 500 error message"""
-    server_response("HTTP/1.1 500 Internal Server Error", connection)
+    return "HTTP/1.1 500 Internal Server Error\n.<CRLF>\n"
 
 
 def server():
@@ -60,10 +59,14 @@ def server():
     try:
         socket = setup_server()
         while True:
-            connection, address = server_listen(socket)
-            result, connection = server_read(connection)
-            print("log:", result)
-            server_response(result, connection)
+            connection, address = socket.accept()
+            try:
+                result = server_read(connection)
+                print("log:", result)
+                to_send = response_ok() + result
+                server_response(to_send, connection)
+            except:
+                server_response(response_error(), connection)
     except KeyboardInterrupt:
         print("Closing the server!")
     finally:
