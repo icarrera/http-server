@@ -6,7 +6,7 @@ import sys
 
 buffer_length = 1024
 
-PORT = 5001
+PORT = 5002
 
 
 def setup_socket():

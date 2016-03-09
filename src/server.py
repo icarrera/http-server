@@ -46,12 +46,12 @@ def server_response(string, connection):
 
 def response_ok():
     """Send back an HTTP 200 OK status message"""
-    return "HTTP/1.1 200 OK<CRLF>\n.<CRLF>\n"
+    return "HTTP/1.1 200 OK<CRLF>\n.<CRLF>\n\n"
 
 
 def response_error():
     """Send back an HTTP 500 error message"""
-    return "HTTP/1.1 500 Internal Server Error\n.<CRLF>\n"
+    return "HTTP/1.1 500 Internal Server Error\n.<CRLF>\n\n"
 
 
 def server():
