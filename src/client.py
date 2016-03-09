@@ -6,7 +6,7 @@ import sys
 
 buffer_length = 1024
 
-PORT = 5000
+PORT = 5001
 
 
 def setup_socket():
@@ -27,11 +27,13 @@ def build_client(socket_details):
 def send_message(socket, message):
     """Send a scrubbed message to the server"""
     socket.connect(('127.0.0.1', PORT))
-    socket.sendall(scrub_message(message))
+    socket.sendall(message)
 
 
 def scrub_message(message):
     """Take the text, and depending if it's python3 or 2, encode it into utf-8"""
+    if not isinstance(message, str):
+        raise TypeError("Message must be string!")
     if len(message) % buffer_length == 0:
         message += '\r'
     if hasattr(message, "decode"):
@@ -57,6 +59,7 @@ def close(socket):
 
 def client(message):
     """Main functionality of building a client and echoing return value"""
+    message = scrub_message(message)
     client = build_client(setup_socket())
     try:
         send_message(client, message)
