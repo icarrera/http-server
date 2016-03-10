@@ -3,7 +3,8 @@
 import socket
 
 buffer_length = 1024
-PORT = 5006
+PORT = 5009
+IP = "172.16.0.109"
 
 
 def setup_server():
@@ -11,7 +12,7 @@ def setup_server():
     server = socket.socket(socket.AF_INET,
                            socket.SOCK_STREAM,
                            socket.IPPROTO_TCP)
-    server.bind((u'127.0.0.1', PORT))
+    server.bind((IP, PORT))
     server.listen(1)
     return server
 
@@ -46,6 +47,7 @@ def parse_request(request):
         raise TypeError('Error 400: Bad Request')
     if version.upper().split('/')[1] != '1.1':
         raise ValueError('Error 505: Invalid HTTP Version')
+    headers = parse_headers(request)
     return uri
 
 
@@ -70,7 +72,7 @@ def server_response(string, connection):
 
 def response_ok():
     """Send back an HTTP 200 OK status message"""
-    return "HTTP/1.1 200 OK<CRLF>\n.<CRLF>\r\n\r\n"
+    return "HTTP/1.1 200 OK\n.<CRLF>\r\nContent-type: text/html\r\n\r\n"  + "<img src=\"https://s3.amazonaws.com/images.seroundtable.com/t-google-404-1299071983.jpg\"><h1> HELLO WORLD!</h1>"
 
 
 def response_error(code=500, message="Whoops! Something Broke."):
@@ -89,8 +91,7 @@ def server():
         while True:
             connection, address = socket.accept()
             try:
-                result = server_read(connection)
-                parse_request(result)
+                result = parse_request(server_read(connection))
                 print("log:", result)
                 to_send = response_ok() + result
                 server_response(to_send, connection)
