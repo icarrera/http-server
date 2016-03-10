@@ -3,7 +3,7 @@
 import socket
 
 buffer_length = 1024
-PORT = 5001
+PORT = 5002
 
 
 def setup_server():
@@ -25,11 +25,6 @@ def server_listen(server):
 def server_read(connection):
     """Read and parse message from client"""
 
-    # XXX 3/6/16
-    # What we should've done was exclude the if statement and call server_response()
-    # REGARDLESS of whether we've recieved the whole message or not, because
-    # We don't care, we just want to echo immediately.
-
     string = ''.encode('utf-8')
     while True:
         part = connection.recv(buffer_length)
@@ -37,6 +32,29 @@ def server_read(connection):
         if len(part) < buffer_length or len(part) == 0:
             break
     return string.decode('utf-8')
+
+def parse_request(request):
+    """Parses our HTTP request."""
+    # Python built-in library names the first line of the request request_line
+
+    request_line = request.split('\n')[0]
+    request_line = request_line.strip()
+    method, url, version = request_line.split()
+    if method.upper() != 'GET':
+        raise TypeError('Error 405: Method Not Allowed')
+    if version.upper().split('/')[0] != 'HTTP':
+        raise TypeError('Error 400: Bad Request')
+    if version.upper().split('/')[1] != '1.1':
+        raise ValueError('Error 505: Invalid HTTP Version')
+
+
+def parse_headers(request):
+    """Validates and parses the headers of our HTTP request."""
+    http_
+
+
+
+
 
 
 def server_response(string, connection):
@@ -46,12 +64,12 @@ def server_response(string, connection):
 
 def response_ok():
     """Send back an HTTP 200 OK status message"""
-    return "HTTP/1.1 200 OK<CRLF>\n.<CRLF>\n"
+    return "HTTP/1.1 200 OK<CRLF>\n.<CRLF>\r\n\r\n"
 
 
 def response_error():
     """Send back an HTTP 500 error message"""
-    return "HTTP/1.1 500 Internal Server Error\n.<CRLF>\n"
+    return "HTTP/1.1 500 Internal Server Error\n.<CRLF>\r\n\r\n"
 
 
 def server():
