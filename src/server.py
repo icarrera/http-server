@@ -3,8 +3,9 @@
 import socket
 
 buffer_length = 1024
-PORT = 5009
-IP = "172.16.0.109"
+PORT = 5004
+# IP = "172.16.0.109"
+IP = "127.0.0.1"
 
 
 def setup_server():
@@ -38,15 +39,19 @@ def server_read(connection):
 def parse_request(request):
     """Parses our HTTP request."""
     # Python built-in library names the first line of the request request_line
+    print([request])
     request_line = request.split('\n')[0]
     request_line = request_line.strip()
-    method, uri, version = request_line.split()
+    try:
+        method, uri, version = request_line.split()
+    except ValueError:
+        raise SyntaxError('400: Bad Request (6)')
     if method.upper() != 'GET':
-        raise TypeError('Error 405: Method Not Allowed')
+        raise TypeError('405: Method Not Allowed')
     if version.upper().split('/')[0] != 'HTTP':
-        raise TypeError('Error 400: Bad Request')
+        raise TypeError('400: Bad Request (5)')
     if version.upper().split('/')[1] != '1.1':
-        raise ValueError('Error 505: Invalid HTTP Version')
+        raise ValueError('505: Invalid HTTP Version')
     headers = parse_headers(request)
     return uri
 
@@ -55,13 +60,17 @@ def parse_headers(request):
     """Validates and parses the headers of our HTTP request."""
     parsed_headers = {}
     http_header = request.replace('\r', '').split('\n')[1:]
+    if not http_header:
+        raise KeyError("400: Bad Request (3)")
     idx = http_header.index('')
     http_header = http_header[:idx]
     for header in http_header:
         if not len(header.split(': ')) == 2:
-            raise SyntaxError('Error 400: Bad Request')
+            raise SyntaxError('400: Bad Request (2)')
         header_key, header_value = header.split(': ')
-        parsed_headers[header_key] = header_value
+        parsed_headers[header_key.lower()] = header_value
+    if not parsed_headers.get('host'):
+        raise KeyError("400: Bad Request (1)")
     return parsed_headers
 
 
@@ -72,7 +81,8 @@ def server_response(string, connection):
 
 def response_ok():
     """Send back an HTTP 200 OK status message"""
-    return "HTTP/1.1 200 OK\n.<CRLF>\r\nContent-type: text/html\r\n\r\n"  + "<img src=\"https://s3.amazonaws.com/images.seroundtable.com/t-google-404-1299071983.jpg\"><h1> HELLO WORLD!</h1>"
+    return ("HTTP/1.1 200 OK\n.<CRLF>\r\nContent-type: text/html\r\n\r\n"
+    "<img src=\"https://s3.amazonaws.com/images.seroundtable.com/t-google-404-1299071983.jpg\"><h1> HELLO WORLD!</h1>")
 
 
 def response_error(code=500, message="Whoops! Something Broke."):
@@ -95,8 +105,15 @@ def server():
                 print("log:", result)
                 to_send = response_ok() + result
                 server_response(to_send, connection)
-            except:
-                server_response(response_error(), connection)
+            except Exception as error:
+                error = error.args[0]
+                try:
+                    code = int(error.split(':')[0])
+                    error = error.split(':')[1].strip()
+                except:
+                    code = 500
+                    error = "Server Error"
+                server_response(response_error(code, error), connection)
     except KeyboardInterrupt:
         print("Closing the server!")
         try:
