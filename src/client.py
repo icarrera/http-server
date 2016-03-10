@@ -6,7 +6,7 @@ import sys
 
 buffer_length = 1024
 
-PORT = 5001
+PORT = 5004
 
 
 def setup_socket():
@@ -71,4 +71,4 @@ def client(message):
     return echo
 
 if __name__ == "__main__":
-    client(sys.argv[1])
+    client("GET /test/ HTTP/1.1\r\nHost: localhost\r\n\r\n")
