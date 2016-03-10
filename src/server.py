@@ -3,7 +3,7 @@
 import socket
 
 buffer_length = 1024
-PORT = 5002
+PORT = 5006
 
 
 def setup_server():
@@ -36,21 +36,28 @@ def server_read(connection):
 def parse_request(request):
     """Parses our HTTP request."""
     # Python built-in library names the first line of the request request_line
-
     request_line = request.split('\n')[0]
     request_line = request_line.strip()
-    method, url, version = request_line.split()
+    method, uri, version = request_line.split()
     if method.upper() != 'GET':
         raise TypeError('Error 405: Method Not Allowed')
     if version.upper().split('/')[0] != 'HTTP':
         raise TypeError('Error 400: Bad Request')
     if version.upper().split('/')[1] != '1.1':
         raise ValueError('Error 505: Invalid HTTP Version')
+    return uri
 
 
 def parse_headers(request):
     """Validates and parses the headers of our HTTP request."""
-    http_
+    parsed_headers = {}
+    http_header = request.replace('\r', '').split('\n')[1:]
+    idx = http_header.index('')
+    http_header = http_header[:idx]
+    for header in http_header:
+        if not len(header.split(': ')) == 2:
+            raise SyntaxError('Error 400: Bad Request')
+
 
 
 
@@ -67,9 +74,13 @@ def response_ok():
     return "HTTP/1.1 200 OK<CRLF>\n.<CRLF>\r\n\r\n"
 
 
-def response_error():
+def response_error(code=500, message="Whoops! Something Broke."):
     """Send back an HTTP 500 error message"""
-    return "HTTP/1.1 500 Internal Server Error\n.<CRLF>\r\n\r\n"
+    if code == 500:
+        image = "<img src=\"https://s3.amazonaws.com/images.seroundtable.com/t-google-404-1299071983.jpg\"><h1> 500 ERROR!</h1>"
+    else:
+        image = ""
+    return "HTTP/1.1 {} {}\n.<CRLF>\r\nContent-type: text/html\r\n\r\n{}".format(code, message, image)
 
 
 def server():
@@ -80,6 +91,7 @@ def server():
             connection, address = socket.accept()
             try:
                 result = server_read(connection)
+                parse_request(result)
                 print("log:", result)
                 to_send = response_ok() + result
                 server_response(to_send, connection)
