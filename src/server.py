@@ -10,7 +10,7 @@ buffer_length = 1024
 PORT = 8000
 IP = "0.0.0.0"
 
-ROOT = "./http-server/webroot/"
+ROOT = "./webroot/"
 
 
 def setup_server():
@@ -145,7 +145,7 @@ def resolve_uri(uri):
     elif os.path.isfile(path):
         return file_response(path)
     else:
-        print("404: Not Found")
+        print("404: Not Found", path)
         raise IOError("404: Not Found")
 
 
