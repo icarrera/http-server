@@ -6,7 +6,7 @@ import io
 
 
 buffer_length = 1024
-PORT = 5009
+PORT = 5002
 IP = "0.0.0.0"
 
 ROOT = "/home/roboiris/projects/http_server/http-server/"
@@ -111,9 +111,17 @@ def directory_response(path):
     return (html_return, "text/html")
 
 
-def file_response():
+def file_response(path):
     """Returns file."""
-    pass
+    if path.endswith(".py"):
+        try:
+            with io.open(os.path.join(ROOT, path)) as f:
+                content = f.read().replace('\n', '<br>').replace(' ', '&nbsp;')
+            return (content, "text/plain")
+        except:
+            raise FileNotFoundError("404: Not Found")
+    else:
+        raise ValueError("403: Forbidden")
 
 
 def resolve_uri(uri):
@@ -122,7 +130,7 @@ def resolve_uri(uri):
     if os.path.isdir(path):
         return directory_response(path)[0]
     elif os.path.isfile(path):
-        return u"is file"
+        return file_response(path)[0]
     else:
         print("404: Not Found")
         return u"SAD DAY NOT FOUND"
