@@ -1,12 +1,13 @@
 # -*-coding:utf-8-*-
 """Handle server operations of reading incoming streams and echoing them"""
 import socket
+import os
 
 buffer_length = 1024
-PORT = 5004
-# IP = "172.16.0.109"
-IP = "127.0.0.1"
+PORT = 5006
+IP = "0.0.0.0"
 
+ROOT = "/home/roboiris/projects/http_server/http-server/"
 
 def setup_server():
     """Build a socket object on localhost and specified port"""
@@ -53,6 +54,7 @@ def parse_request(request):
     if version.upper().split('/')[1] != '1.1':
         raise ValueError('505: Invalid HTTP Version')
     headers = parse_headers(request)
+    uri = resolve_uri(uri)
     return uri
 
 
@@ -93,6 +95,20 @@ def response_error(code=500, message="Whoops! Something Broke."):
         image = ""
     return "HTTP/1.1 {} {}\n.<CRLF>\r\nContent-type: text/html\r\n\r\n{}".format(code, message, image)
 
+def directory_response():
+    """Returns listing of that directory."""
+    pass
+
+
+def file_response():
+    """Returns file."""
+    pass
+
+
+def resolve_uri(uri):
+    path = os.path.join(ROOT, uri[1:])
+    # os.listdir(path)
+    return path
 
 def server():
     """Main server loop"""
