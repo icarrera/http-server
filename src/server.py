@@ -4,9 +4,10 @@ import socket
 import os
 import io
 import sys
+import mimetypes
 
 buffer_length = 1024
-PORT = 5000
+PORT = int(sys.argv[1])
 IP = "0.0.0.0"
 
 ROOT = "./webroot/"
@@ -18,7 +19,7 @@ def setup_server():
                            socket.SOCK_STREAM,
                            socket.IPPROTO_TCP)
     server.bind((IP, PORT))
-    server.listen(1)
+    server.listen(5)
     return server
 
 
@@ -82,12 +83,19 @@ def parse_headers(request):
 
 def server_response(string, connection):
     """Send back specified string to specified connection"""
-    connection.send(string.encode('utf-8'))
+    if isinstance(string, bytes):
+        connection.send(string)
+    else:
+        connection.send(string.encode('utf-8'))
 
 
 def response_ok(content, tag):
     """Send back an HTTP 200 OK status message"""
-    return ("HTTP/1.1 200 OK\r\nContent-type: {}\r\n\r\n{}".format(tag, content))
+    if isinstance(content, bytes):
+        to_return = b"HTTP/1.1 200 OK\r\nContent-type: " + bytes(tag.encode()) + b"\r\n\r\n" + content
+        return to_return
+    else:
+        return ("HTTP/1.1 200 OK\r\nContent-type: {}\r\n\r\n{}".format(tag, content))
 
 
 def response_error(code=500, message="Whoops! Something Broke."):
@@ -97,6 +105,7 @@ def response_error(code=500, message="Whoops! Something Broke."):
     else:
         image = ""
     return "HTTP/1.1 {} {}\r\nContent-type: text/html\r\n\r\n{}".format(code, message, image)
+
 
 def directory_response(path):
     """Returns listing of that directory."""
@@ -114,9 +123,15 @@ def directory_response(path):
 def file_response(path):
     """Returns file."""
     try:
-        with io.open(path) as f:
-            content = f.read()
-        return (content, "text/{}".format(os.path.splitext(path)[-1][1:]))
+        if mimetypes.guess_type(path)[0].startswith('text'):
+            with io.open(path, 'rb') as f:
+                content = f.read()
+            return (content, mimetypes.guess_type(path)[0])
+        else:
+            assert os.path.isfile(path)
+            with io.open(path, 'rb') as f:
+                content = f.read()
+            return (content, mimetypes.guess_type(path)[0])
     except Exception as e:
         sys.exit(e)
         raise IOError("404: Not Found")
