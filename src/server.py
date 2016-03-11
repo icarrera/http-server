@@ -3,13 +3,13 @@
 import socket
 import os
 import io
-
+import sys
 
 buffer_length = 1024
-PORT = 5002
+PORT = 5000
 IP = "0.0.0.0"
 
-ROOT = "/home/titan/projects/http_server/http-server/webroot/"
+ROOT = "./webroot/"
 
 
 def setup_server():
@@ -58,8 +58,8 @@ def parse_request(request):
     if version.upper().split('/')[1] != '1.1':
         raise ValueError('505: Invalid HTTP Version')
     headers = parse_headers(request)
-    uri = resolve_uri(uri)
-    return uri
+    content, mime = resolve_uri(uri)
+    return (content, mime)
 
 
 def parse_headers(request):
@@ -87,7 +87,7 @@ def server_response(string, connection):
 
 def response_ok(content, tag):
     """Send back an HTTP 200 OK status message"""
-    return ("HTTP/1.1 200 OK\n\r\nContent-type: {}\r\n\r\n{}".format(tag, content))
+    return ("HTTP/1.1 200 OK\r\nContent-type: {}\r\n\r\n{}".format(tag, content))
 
 
 def response_error(code=500, message="Whoops! Something Broke."):
@@ -96,7 +96,7 @@ def response_error(code=500, message="Whoops! Something Broke."):
         image = "<img src=\"https://s3.amazonaws.com/images.seroundtable.com/t-google-404-1299071983.jpg\"><h1> 500 ERROR!</h1>"
     else:
         image = ""
-    return "HTTP/1.1 {} {}\n.<CRLF>\r\nContent-type: text/html\r\n\r\n{}".format(code, message, image)
+    return "HTTP/1.1 {} {}\r\nContent-type: text/html\r\n\r\n{}".format(code, message, image)
 
 def directory_response(path):
     """Returns listing of that directory."""
@@ -114,10 +114,11 @@ def directory_response(path):
 def file_response(path):
     """Returns file."""
     try:
-        with io.open(os.path.join(ROOT, path)) as f:
-            content = f.read().replace('\n', '<br>').replace(' ', '&nbsp;')
-        return (content, "text/{}".format(os.path.splitext(path)[-1]))
-    except:
+        with io.open(path) as f:
+            content = f.read()
+        return (content, "text/{}".format(os.path.splitext(path)[-1][1:]))
+    except Exception as e:
+        sys.exit(e)
         raise IOError("404: Not Found")
 
 
@@ -130,8 +131,7 @@ def resolve_uri(uri):
         return file_response(path)
     else:
         print("404: Not Found")
-        return u"SAD DAY NOT FOUND"
-    return path
+        raise IOError("404: Not Found")
 
 
 def server():
@@ -141,9 +141,9 @@ def server():
         while True:
             connection, address = socket.accept()
             try:
-                result = parse_request(server_read(connection))
+                result, mime = parse_request(server_read(connection))
                 print("log:", result)
-                to_send = response_ok(result, 'text/html')
+                to_send = response_ok(result, mime)
                 server_response(to_send, connection)
             except Exception as error:
                 try:
@@ -154,6 +154,8 @@ def server():
                     code = 500
                     error = "Server Error"
                 server_response(response_error(code, error), connection)
+            finally:
+                connection.close()
     except KeyboardInterrupt:
         print("Closing the server!")
         try:
