@@ -92,10 +92,10 @@ def server_response(string, connection):
 def response_ok(content, tag):
     """Send back an HTTP 200 OK status message"""
     if isinstance(content, bytes):
-        to_return = b"HTTP/1.1 200 OK\r\nContent-type: " + bytes(tag.encode()) + b"\r\n\r\n" + content
+        to_return = b"HTTP/1.1 200 OK\r\nContent-type: " + bytes(tag.encode()) + b"\r\n" + b"Content-length: " + bytes(str(len(content)).encode()) + b"\r\n\r\n" + content
         return to_return
     else:
-        return ("HTTP/1.1 200 OK\r\nContent-type: {}\r\n\r\n{}".format(tag, content))
+        return ("HTTP/1.1 200 OK\r\nContent-type: {}\r\nContent-length: {}\r\n\r\n{}".format(tag, len(content), content))
 
 
 def response_error(code=500, message="Whoops! Something Broke."):
