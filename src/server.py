@@ -10,7 +10,7 @@ buffer_length = 1024
 PORT = 8000
 IP = "0.0.0.0"
 
-ROOT = "./webroot/"
+ROOT = "../webroot/"
 
 
 def setup_server():
@@ -103,7 +103,7 @@ def response_error(code=500, message="Whoops! Something Broke."):
     if code == 500:
         image = "<img src=\"https://s3.amazonaws.com/images.seroundtable.com/t-google-404-1299071983.jpg\"><h1> 500 ERROR!</h1>"
     else:
-        image = ""
+        image = "<img src=\"google_404_robot.jpg\"><h1>404 ERROR!</h1>"
     return "HTTP/1.1 {} {}\r\nContent-type: text/html\r\n\r\n{}".format(code, message, image)
 
 

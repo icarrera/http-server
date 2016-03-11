@@ -4,9 +4,15 @@ import socket
 import sys
 
 
+METHOD_DICT = {
+    "GET": "GET / HTTP/1.1\r\nHost: localhost\r\n\r\n",
+    "BAD_URI": "GET /bad.html HTTP/1.1\r\nHost: localhost\r\n\r\n",
+    "BAD_METHOD": "PUT HTTP/1.1\r\nHost: localhost\r\n\r\n",
+}
+
 buffer_length = 1024
 
-PORT = 5001
+PORT = 8000
 
 
 def setup_socket():
@@ -71,4 +77,4 @@ def client(message):
     return echo
 
 if __name__ == "__main__":
-    client("GET /test/ HTTP/1.1\r\nHost: localhost\r\n\r\n")
+    client(METHOD_DICT[sys.argv[1]])
