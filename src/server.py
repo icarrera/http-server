@@ -2,9 +2,11 @@
 """Handle server operations of reading incoming streams and echoing them"""
 import socket
 import os
+import io
+
 
 buffer_length = 1024
-PORT = 5006
+PORT = 5009
 IP = "0.0.0.0"
 
 ROOT = "/home/roboiris/projects/http_server/http-server/"
@@ -40,6 +42,7 @@ def server_read(connection):
 def parse_request(request):
     """Parses our HTTP request."""
     # Python built-in library names the first line of the request request_line
+    # raise ValueError("404: Not Found")
     print([request])
     request_line = request.split('\n')[0]
     request_line = request_line.strip()
@@ -95,9 +98,17 @@ def response_error(code=500, message="Whoops! Something Broke."):
         image = ""
     return "HTTP/1.1 {} {}\n.<CRLF>\r\nContent-type: text/html\r\n\r\n{}".format(code, message, image)
 
-def directory_response():
+def directory_response(path):
     """Returns listing of that directory."""
-    pass
+    html_return = "<ul>"
+    for node in os.listdir(path):
+        print(path)
+        if os.path.isdir(os.path.join(path, node)):
+            html_return += "<a href=\"{}/\"><li>{}</li></a>".format(node, node)
+        else:
+            html_return += "<a href=\"{}\"><li>{}</li></a>".format(node, node)
+    html_return += "</ul>"
+    return (html_return, "text/html")
 
 
 def file_response():
@@ -106,12 +117,20 @@ def file_response():
 
 
 def resolve_uri(uri):
+    """Resolves our uri."""
     path = os.path.join(ROOT, uri[1:])
-    # os.listdir(path)
+    if os.path.isdir(path):
+        return directory_response(path)[0]
+    elif os.path.isfile(path):
+        return u"is file"
+    else:
+        print("404: Not Found")
+        return u"SAD DAY NOT FOUND"
     return path
 
+
 def server():
-    """Main server loop"""
+    """Main server loop."""
     try:
         socket = setup_server()
         while True:
@@ -122,8 +141,8 @@ def server():
                 to_send = response_ok() + result
                 server_response(to_send, connection)
             except Exception as error:
-                error = error.args[0]
                 try:
+                    error = error.args[0]
                     code = int(error.split(':')[0])
                     error = error.split(':')[1].strip()
                 except:
