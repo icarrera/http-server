@@ -66,4 +66,4 @@ def test_directory_response():
 
 def test_file_response():
     from server import file_response
-    assert b"This is" in file_response('../webroot/sample.txt')[0]
+    assert b"This is" in file_response('./webroot/sample.txt')[0]
