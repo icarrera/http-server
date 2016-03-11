@@ -7,10 +7,10 @@ import sys
 import mimetypes
 
 buffer_length = 1024
-PORT = int(sys.argv[1])
+PORT = 8000
 IP = "0.0.0.0"
 
-ROOT = "./webroot/"
+ROOT = "./http-server/webroot/"
 
 
 def setup_server():
