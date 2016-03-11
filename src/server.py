@@ -9,7 +9,8 @@ buffer_length = 1024
 PORT = 5002
 IP = "0.0.0.0"
 
-ROOT = "/home/roboiris/projects/http_server/http-server/"
+ROOT = "/home/titan/projects/http_server/http-server/webroot/"
+
 
 def setup_server():
     """Build a socket object on localhost and specified port"""
@@ -84,10 +85,9 @@ def server_response(string, connection):
     connection.send(string.encode('utf-8'))
 
 
-def response_ok():
+def response_ok(content, tag):
     """Send back an HTTP 200 OK status message"""
-    return ("HTTP/1.1 200 OK\n.<CRLF>\r\nContent-type: text/html\r\n\r\n"
-    "<img src=\"https://s3.amazonaws.com/images.seroundtable.com/t-google-404-1299071983.jpg\"><h1> HELLO WORLD!</h1>")
+    return ("HTTP/1.1 200 OK\n\r\nContent-type: {}\r\n\r\n{}".format(tag, content))
 
 
 def response_error(code=500, message="Whoops! Something Broke."):
@@ -113,24 +113,21 @@ def directory_response(path):
 
 def file_response(path):
     """Returns file."""
-    if path.endswith(".py"):
-        try:
-            with io.open(os.path.join(ROOT, path)) as f:
-                content = f.read().replace('\n', '<br>').replace(' ', '&nbsp;')
-            return (content, "text/plain")
-        except:
-            raise FileNotFoundError("404: Not Found")
-    else:
-        raise ValueError("403: Forbidden")
+    try:
+        with io.open(os.path.join(ROOT, path)) as f:
+            content = f.read().replace('\n', '<br>').replace(' ', '&nbsp;')
+        return (content, "text/{}".format(os.path.splitext(path)[-1]))
+    except:
+        raise IOError("404: Not Found")
 
 
 def resolve_uri(uri):
     """Resolves our uri."""
     path = os.path.join(ROOT, uri[1:])
     if os.path.isdir(path):
-        return directory_response(path)[0]
+        return directory_response(path)
     elif os.path.isfile(path):
-        return file_response(path)[0]
+        return file_response(path)
     else:
         print("404: Not Found")
         return u"SAD DAY NOT FOUND"
@@ -146,7 +143,7 @@ def server():
             try:
                 result = parse_request(server_read(connection))
                 print("log:", result)
-                to_send = response_ok() + result
+                to_send = response_ok(result, 'text/html')
                 server_response(to_send, connection)
             except Exception as error:
                 try:
