@@ -1,11 +1,16 @@
 # -*-coding:utf-8-*-
 """Handle server operations of reading incoming streams and echoing them"""
 import socket
+import os
+import io
+import sys
+import mimetypes
 
 buffer_length = 1024
-PORT = 5004
-# IP = "172.16.0.109"
-IP = "127.0.0.1"
+PORT = 8000
+IP = "0.0.0.0"
+
+ROOT = "./http-server/webroot/"
 
 
 def setup_server():
@@ -14,7 +19,7 @@ def setup_server():
                            socket.SOCK_STREAM,
                            socket.IPPROTO_TCP)
     server.bind((IP, PORT))
-    server.listen(1)
+    server.listen(5)
     return server
 
 
@@ -39,6 +44,7 @@ def server_read(connection):
 def parse_request(request):
     """Parses our HTTP request."""
     # Python built-in library names the first line of the request request_line
+    # raise ValueError("404: Not Found")
     print([request])
     request_line = request.split('\n')[0]
     request_line = request_line.strip()
@@ -53,7 +59,8 @@ def parse_request(request):
     if version.upper().split('/')[1] != '1.1':
         raise ValueError('505: Invalid HTTP Version')
     headers = parse_headers(request)
-    return uri
+    content, mime = resolve_uri(uri)
+    return (content, mime)
 
 
 def parse_headers(request):
@@ -76,13 +83,19 @@ def parse_headers(request):
 
 def server_response(string, connection):
     """Send back specified string to specified connection"""
-    connection.send(string.encode('utf-8'))
+    if isinstance(string, bytes):
+        connection.send(string)
+    else:
+        connection.send(string.encode('utf-8'))
 
 
-def response_ok():
+def response_ok(content, tag):
     """Send back an HTTP 200 OK status message"""
-    return ("HTTP/1.1 200 OK\n.<CRLF>\r\nContent-type: text/html\r\n\r\n"
-    "<img src=\"https://s3.amazonaws.com/images.seroundtable.com/t-google-404-1299071983.jpg\"><h1> HELLO WORLD!</h1>")
+    if isinstance(content, bytes):
+        to_return = b"HTTP/1.1 200 OK\r\nContent-type: " + bytes(tag.encode()) + b"\r\n" + b"Content-length: " + bytes(str(len(content)).encode()) + b"\r\n\r\n" + content
+        return to_return
+    else:
+        return ("HTTP/1.1 200 OK\r\nContent-type: {}\r\nContent-length: {}\r\n\r\n{}".format(tag, len(content), content))
 
 
 def response_error(code=500, message="Whoops! Something Broke."):
@@ -91,29 +104,73 @@ def response_error(code=500, message="Whoops! Something Broke."):
         image = "<img src=\"https://s3.amazonaws.com/images.seroundtable.com/t-google-404-1299071983.jpg\"><h1> 500 ERROR!</h1>"
     else:
         image = ""
-    return "HTTP/1.1 {} {}\n.<CRLF>\r\nContent-type: text/html\r\n\r\n{}".format(code, message, image)
+    return "HTTP/1.1 {} {}\r\nContent-type: text/html\r\n\r\n{}".format(code, message, image)
+
+
+def directory_response(path):
+    """Returns listing of that directory."""
+    html_return = "<ul>"
+    for node in os.listdir(path):
+        print(path)
+        if os.path.isdir(os.path.join(path, node)):
+            html_return += "<a href=\"{}/\"><li>{}</li></a>".format(node, node)
+        else:
+            html_return += "<a href=\"{}\"><li>{}</li></a>".format(node, node)
+    html_return += "</ul>"
+    return (html_return, "text/html")
+
+
+def file_response(path):
+    """Returns file."""
+    try:
+        if mimetypes.guess_type(path)[0].startswith('text'):
+            with io.open(path, 'rb') as f:
+                content = f.read()
+            return (content, mimetypes.guess_type(path)[0])
+        else:
+            assert os.path.isfile(path)
+            with io.open(path, 'rb') as f:
+                content = f.read()
+            return (content, mimetypes.guess_type(path)[0])
+    except Exception as e:
+        sys.exit(e)
+        raise IOError("404: Not Found")
+
+
+def resolve_uri(uri):
+    """Resolves our uri."""
+    path = os.path.join(ROOT, uri[1:])
+    if os.path.isdir(path):
+        return directory_response(path)
+    elif os.path.isfile(path):
+        return file_response(path)
+    else:
+        print("404: Not Found")
+        raise IOError("404: Not Found")
 
 
 def server():
-    """Main server loop"""
+    """Main server loop."""
     try:
         socket = setup_server()
         while True:
             connection, address = socket.accept()
             try:
-                result = parse_request(server_read(connection))
+                result, mime = parse_request(server_read(connection))
                 print("log:", result)
-                to_send = response_ok() + result
+                to_send = response_ok(result, mime)
                 server_response(to_send, connection)
             except Exception as error:
-                error = error.args[0]
                 try:
+                    error = error.args[0]
                     code = int(error.split(':')[0])
                     error = error.split(':')[1].strip()
                 except:
                     code = 500
                     error = "Server Error"
                 server_response(response_error(code, error), connection)
+            finally:
+                connection.close()
     except KeyboardInterrupt:
         print("Closing the server!")
         try:
