@@ -10,4 +10,5 @@ setup(
     py_modules=['client', 'server'],
     package_dir={'': 'src'},
     extras_require={'test': ['pytest', 'pytest-xdist', 'tox']},
+    install_requires=['gevent'],
 )
