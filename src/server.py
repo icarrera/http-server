@@ -10,7 +10,7 @@ buffer_length = 1024
 PORT = int(sys.argv[1])
 IP = "0.0.0.0"
 
-ROOT = "./webroot/"
+ROOT = os.path.join(os.path.abspath(os.path.dirname(__file__)), "../webroot/")
 
 
 def setup_server():
