@@ -7,7 +7,7 @@ import sys
 import mimetypes
 
 buffer_length = 1024
-PORT = int(sys.argv[1])
+PORT = 8000
 IP = "0.0.0.0"
 
 ROOT = os.path.join(os.path.abspath(os.path.dirname(__file__)), "../webroot/")
