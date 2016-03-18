@@ -1,5 +1,5 @@
 # -*-coding:utf-8-*-
-"""Handle server operations of reading incoming streams and echoing them"""
+"""Handle server operations of reading incoming streams and echoing them."""
 import socket
 import os
 import io
@@ -14,7 +14,7 @@ ROOT = os.path.join(os.path.abspath(os.path.dirname(__file__)), "../webroot/")
 
 
 def setup_server():
-    """Build a socket object on localhost and specified port"""
+    """Build a socket object on localhost and specified port."""
     server = socket.socket(socket.AF_INET,
                            socket.SOCK_STREAM,
                            socket.IPPROTO_TCP)
@@ -24,14 +24,13 @@ def setup_server():
 
 
 def server_listen(server):
-    """Accept connections from the client"""
+    """Accept connections from the client."""
     conn, addr = server.accept()
     return (conn, addr)
 
 
 def server_read(connection):
-    """Read and parse message from client"""
-
+    """Read and parse message from client."""
     string = ''.encode('utf-8')
     while True:
         part = connection.recv(buffer_length)
@@ -42,7 +41,7 @@ def server_read(connection):
 
 
 def parse_request(request):
-    """Parses our HTTP request."""
+    """Parse our HTTP request."""
     # Python built-in library names the first line of the request request_line
     # raise ValueError("404: Not Found")
     print([request])
@@ -58,13 +57,13 @@ def parse_request(request):
         raise TypeError('400: Bad Request (5)')
     if version.upper().split('/')[1] != '1.1':
         raise ValueError('505: Invalid HTTP Version')
-    headers = parse_headers(request)
+    # headers = parse_headers(request)
     content, mime = resolve_uri(uri)
     return (content, mime)
 
 
 def parse_headers(request):
-    """Validates and parses the headers of our HTTP request."""
+    """Validate and parses the headers of our HTTP request."""
     parsed_headers = {}
     http_header = request.replace('\r', '').split('\n')[1:]
     if not http_header:
@@ -82,7 +81,7 @@ def parse_headers(request):
 
 
 def server_response(string, connection):
-    """Send back specified string to specified connection"""
+    """Send back specified string to specified connection."""
     if isinstance(string, bytes):
         connection.send(string)
     else:
@@ -90,25 +89,31 @@ def server_response(string, connection):
 
 
 def response_ok(content, tag):
-    """Send back an HTTP 200 OK status message"""
+    """Send back an HTTP 200 OK status message."""
     if isinstance(content, bytes):
-        to_return = b"HTTP/1.1 200 OK\r\nContent-type: " + bytes(tag.encode()) + b"\r\n" + b"Content-length: " + bytes(str(len(content)).encode()) + b"\r\n\r\n" + content
+        to_return = b"HTTP/1.1 200 OK\r\nContent-type: " +\
+                    bytes(tag.encode()) +\
+                    b"\r\n" + b"Content-length: " +\
+                    bytes(str(len(content)).encode()) +\
+                    b"\r\n\r\n" + content
         return to_return
     else:
-        return ("HTTP/1.1 200 OK\r\nContent-type: {}\r\nContent-length: {}\r\n\r\n{}".format(tag, len(content), content))
+        return ("HTTP/1.1 200 OK\r\nContent-type: {}\r\nContent-length:\
+                {}\r\n\r\n{}".format(tag, len(content), content))
 
 
 def response_error(code=500, message="Whoops! Something Broke."):
-    """Send back an HTTP 500 error message"""
+    """Send back an HTTP 500 error message."""
     if code == 500:
-        image = "<img src=\"https://s3.amazonaws.com/images.seroundtable.com/t-google-404-1299071983.jpg\"><h1> 500 ERROR!</h1>"
+        image = "<h1> 500 ERROR!</h1>"
     else:
-        image = ""
-    return "HTTP/1.1 {} {}\r\nContent-type: text/html\r\n\r\n{}".format(code, message, image)
+        image = "<h1>{}-{}</h1>".format(code, message)
+    return "HTTP/1.1 {} {}\r\nContent-type:\
+            text/html\r\n\r\n{}".format(code, message, image)
 
 
 def directory_response(path):
-    """Returns listing of that directory."""
+    """Return listing of that directory."""
     html_return = "<ul>"
     for node in os.listdir(path):
         print(path)
@@ -121,7 +126,7 @@ def directory_response(path):
 
 
 def file_response(path):
-    """Returns file."""
+    """Return file."""
     try:
         if mimetypes.guess_type(path)[0].startswith('text'):
             with io.open(path, 'rb') as f:
@@ -138,7 +143,7 @@ def file_response(path):
 
 
 def resolve_uri(uri):
-    """Resolves our uri."""
+    """Resolve our uri."""
     path = os.path.join(ROOT, uri[1:])
     if os.path.isdir(path):
         return directory_response(path)
