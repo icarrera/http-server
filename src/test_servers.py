@@ -25,8 +25,7 @@ def test_buffer_minus_one():
     """
     message = "a" * 1023
     assert client.client("GET " + message +
-                         " HTTP/1.1\r\nHost: localhost\r\n\r\n")
-                          .startswith("HTTP/1.1 404")
+                         " HTTP/1.1\r\nHost: localhost\r\n\r\n").startswith("HTTP/1.1 404")
 
 
 def test_several_buffers():
@@ -37,8 +36,7 @@ def test_several_buffers():
     """
     message = ("a" * 1024) + ("b" * 1024)
     assert client.client("GET " + message +
-                         " HTTP/1.1\r\nHost: localhost\r\n\r\n")
-                        .startswith("HTTP/1.1 404")
+                         " HTTP/1.1\r\nHost: localhost\r\n\r\n").startswith("HTTP/1.1 404")
 
 
 def test_non_ascii():
@@ -53,12 +51,10 @@ def test_non_ascii():
     if hasattr(message, "decode"):
         with pytest.raises(TypeError):
             assert client.client("GET " + message +
-                                 " HTTP/1.1\r\nHost: localhost\r\n\r\n")
-                                 .startswith(HTTP_RESPONSE_CODE).decode('utf-8')
+                                 " HTTP/1.1\r\nHost: localhost\r\n\r\n").startswith(HTTP_RESPONSE_CODE).decode('utf-8')
     else:
         client.client("GET " + message +
-                      " HTTP/1.1\r\nHost: localhost\r\n\r\n")
-                      .startswith("HTTP/1.1 404")
+                      " HTTP/1.1\r\nHost: localhost\r\n\r\n").startswith("HTTP/1.1 404")
 
 
 def test_400():
